@@ -13,7 +13,7 @@ export default async function handler(
   const client = await pool.connect();
 
   for (let i = 0; i < 10; i++) {
-    const res = await client.query("SELECT NOW() as time");
+    const res = await client.query("SELECT true as time");
     console.log(res.rows[0].time);
   }
 
