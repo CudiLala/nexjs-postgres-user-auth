@@ -12,10 +12,8 @@ export async function createUser(
 ) {
   let { full_name, email, phone, password_hash } = body;
 
-  let sql = readFileSync(process.cwd() + "/sql/auth/sign_up.sql").toString();
-  let resp = await client.query(sql, [full_name, email, phone, password_hash]);
-
-  return { userId: resp.rows[0] };
+  let sql = readFileSync(process.cwd() + "/sql/users/create.sql").toString();
+  await client.query(sql, [full_name, email, phone, password_hash]);
 }
 
 export async function doesEmailExist(

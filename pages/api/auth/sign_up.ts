@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcrypt";
-import { readFileSync } from "fs";
 import { Client, PoolClient } from "pg";
 
-import { createUser, doesEmailExist, doesPhoneExist } from "@/api_utils/user";
+import { createUser, doesEmailExist, doesPhoneExist } from "@/api_utils/users";
 import pool from "@/db/pool";
 
 export default async function signUpHandler(
@@ -28,14 +27,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       req.body
     );
 
-    const { userId } = await createUser(client, {
+    await createUser(client, {
       full_name,
       email,
       phone,
       password_hash,
     });
-
-    console.log(userId);
 
     client.release();
     return res.status(200).json({ success: true });

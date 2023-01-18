@@ -1,3 +1,2 @@
 INSERT INTO users (full_name, email, phone, password_hash)
-VALUES ($1, $2, $3, $4)
-RETURNING id;
+VALUES ($1, $2, $3, $4);
