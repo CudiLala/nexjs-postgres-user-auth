@@ -6,7 +6,6 @@ let pool = new Pool({
   password: "ridpest",
   port: 5432,
   max: 32,
-  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 30000,
 });
 

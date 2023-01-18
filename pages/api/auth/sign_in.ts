@@ -1,10 +1,9 @@
+import { validateJSONContentType } from "@/api_utils";
+import { signInUser } from "@/api_utils/users";
+import pool from "@/db/pool";
 import { NextApiRequest, NextApiResponse } from "next";
 
-import pool from "@/db/pool";
-import { validateJSONContentType } from "@/api_utils";
-import { createUser, signInUser } from "@/api_utils/users";
-
-export default async function signUpHandler(
+export default function signInHandler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -23,7 +22,6 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     const client = await pool.connect();
 
-    const _ = await createUser(client, req.body);
     const { token } = await signInUser(client, req.body);
 
     client.release();
