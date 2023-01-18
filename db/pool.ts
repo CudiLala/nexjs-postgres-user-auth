@@ -1,9 +1,9 @@
 import Pool from "pg-pool";
 
 let pool = new Pool({
-  database: "ridpest",
-  user: "ridpest",
-  password: "ridpest",
+  database: process.env.PG_DB_NAME,
+  user: process.env.PG_USERNAME,
+  password: process.env.PG_PASSWORD,
   port: 5432,
   max: 32,
   connectionTimeoutMillis: 30000,
