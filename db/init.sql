@@ -1,9 +1,21 @@
 DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
-  id uuid DEFAULT gen_random_uuid () PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid () PRIMARY KEY,
   full_name VARCHAR(150) NOT NULL, 
   email VARCHAR(150) UNIQUE NOT NULL,
   phone VARCHAR(50) UNIQUE NOT NULL,
   password_hash VARCHAR(300) NOT NULL
+);
+
+DROP TABLE IF EXISTS user_sessions CASCADE;
+
+CREATE TABLE user_sessions (
+  token CHAR(64) PRIMARY KEY,
+  user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY(user_id) 
+	  REFERENCES users(id)
+    ON DELETE CASCADE
 );

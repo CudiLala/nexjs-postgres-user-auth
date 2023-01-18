@@ -23,7 +23,7 @@ async function doesEmailExist(client: Client & PoolClient, email: string) {
 
   let resp = await client.query(sql, [email]);
 
-  return resp.rows[0]?.val;
+  return resp.rows[0]?.val as boolean;
 }
 
 async function doesPhoneExist(client: Client & PoolClient, phone: string) {
@@ -36,20 +36,57 @@ async function doesPhoneExist(client: Client & PoolClient, phone: string) {
 
   let resp = await client.query(sql, [phone]);
 
-  return resp.rows[0]?.val;
+  return resp.rows[0]?.val as boolean;
 }
 
-async function generateToken() {
-  return crypto.randomBytes(32).toString("hex");
+async function doesTokenExist(client: Client & PoolClient, token: string) {
+  let sql = readFileSync(
+    process.cwd() + "/sql/does_field_exist_in_table.sql"
+  ).toString();
+
+  sql = sql.replace("$table", "user_sessions");
+  sql = sql.replace("$column", "token");
+
+  let resp = await client.query(sql, [token]);
+
+  return resp.rows[0]?.val as boolean;
+}
+
+async function generateToken(client: Client & PoolClient): Promise<string> {
+  let token = crypto.randomBytes(32).toString("hex");
+
+  if (await doesTokenExist(client, token)) return await generateToken(client);
+
+  return token;
 }
 
 export async function signInUser(
   client: Client & PoolClient,
   body: any
 ): Promise<{ token: string }> {
-  await validateSignInUser(client, body);
+  const { user_id } = await validateSignInUser(client, body);
 
-  return { token: await generateToken() };
+  const token = await generateToken(client);
+
+  await storeSession(client, { user_id, token });
+
+  return { token };
+}
+
+async function storeSession(
+  client: Client & PoolClient,
+  body: {
+    user_id: string;
+    token: string;
+  }
+) {
+  const { user_id, token } = body;
+
+  let sql = readFileSync(
+    process.cwd() + "/sql/auth/store_session.sql"
+  ).toString();
+
+  await client.query(sql, [user_id, token]);
 }
 
 async function validateCreateUser(
@@ -113,7 +150,7 @@ async function validateSignInUser(client: Client & PoolClient, body: any) {
   let sql = readFileSync(
     process.cwd() + "/sql/users//get_user_by_email_or_phone.sql"
   ).toString();
-  sql = sql.replace("$return_fields", "password_hash");
+  sql = sql.replace("$return_fields", "id, password_hash");
 
   let resp = await client.query(sql, [email || phone]);
 
@@ -124,4 +161,6 @@ async function validateSignInUser(client: Client & PoolClient, body: any) {
 
   if (!(await bcrypt.compare(password, password_hash)))
     throw { status: 400, msg: "Wrong password" };
+
+  return { user_id: resp.rows[0].id };
 }
