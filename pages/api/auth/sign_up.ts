@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcrypt";
-import pool from "@/db/pool";
 import { readFileSync } from "fs";
 import { Client, PoolClient } from "pg";
+
+import { createUser, doesEmailExist, doesPhoneExist } from "@/api_utils/user";
+import pool from "@/db/pool";
 
 export default async function signUpHandler(
   req: NextApiRequest,
@@ -42,23 +44,6 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const { status = 500, msg = "Unknown Error" } = err;
     return res.status(status).json({ success: false, msg });
   }
-}
-
-async function createUser(
-  client: Client & PoolClient,
-  body: {
-    full_name: string;
-    email: string;
-    phone: string;
-    password_hash: string;
-  }
-) {
-  let { full_name, email, phone, password_hash } = body;
-
-  let sql = readFileSync(process.cwd() + "/sql/auth/sign_up.sql").toString();
-  let resp = await client.query(sql, [full_name, email, phone, password_hash]);
-
-  return { userId: resp.rows[0] };
 }
 
 async function validatePost(
@@ -110,32 +95,6 @@ async function validatePost(
   const password_hash = await bcrypt.hash(password, 4);
 
   return { full_name, email, phone, password_hash };
-}
-
-async function doesEmailExist(client: Client & PoolClient, email: string) {
-  let sql = readFileSync(
-    process.cwd() + "/sql/does_field_exist_in_table.sql"
-  ).toString();
-
-  sql = sql.replace("$table", "users");
-  sql = sql.replace("$column", "email");
-
-  let resp = await client.query(sql, [email]);
-
-  return resp.rows[0].val;
-}
-
-async function doesPhoneExist(client: Client & PoolClient, phone: string) {
-  let sql = readFileSync(
-    process.cwd() + "/sql/does_field_exist_in_table.sql"
-  ).toString();
-
-  sql = sql.replace("$table", "users");
-  sql = sql.replace("$column", "phone");
-
-  let resp = await client.query(sql, [phone]);
-
-  return resp.rows[0].val;
 }
 
 function validateJSONContentType(req: NextApiRequest) {
